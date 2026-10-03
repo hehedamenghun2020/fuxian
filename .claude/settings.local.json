@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//root/.claude/**)",
+      "Bash(curl -sN https://agentrouter.org/v1/messages -H 'x-api-key: sk-uvsLoK0Wmcbe9aPf1fGfha5vwP3p1XesvFVO8Wnht8f9BDvs' -H 'content-type: application/json' -H 'anthropic-version: 2023-06-01' -d '{ *)",
+      "Bash(curl -sN https://agentrouter.org/v1/messages -H 'Authorization: Bearer sk-uvsLoK0Wmcbe9aPf1fGfha5vwP3p1XesvFVO8Wnht8f9BDvs' -H 'content-type: application/json' -H 'anthropic-version: 2023-06-01' -d '{ *)",
+      "Bash(curl -sN https://agentrouter.org/v1/messages -H 'x-api-key: sk-uvsLoK0Wmcbe9aPf1fGfha5vwP3p1XesvFVO8Wnht8f9BDvs' -H 'Authorization: Bearer sk-uvsLoK0Wmcbe9aPf1fGfha5vwP3p1XesvFVO8Wnht8f9BDvs' -H 'content-type: application/json' -H 'anthropic-version: 2023-06-01' -d '{ *)",
+      "Bash(curl -sN https://agentrouter.org/v1/chat/completions -H 'Authorization: Bearer sk-uvsLoK0Wmcbe9aPf1fGfha5vwP3p1XesvFVO8Wnht8f9BDvs' -H 'content-type: application/json' -d '{ *)",
+      "Bash(curl -sv https://agentrouter.org/)",
+      "Bash(pip list *)",
+      "Bash(pip install *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3)",
+      "WebFetch(domain:docs.ebtech.com)"
+    ]
+  }
+}
