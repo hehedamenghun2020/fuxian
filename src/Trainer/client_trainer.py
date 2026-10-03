@@ -12,8 +12,15 @@ from torch import nn
 import pickle
 import os
 import copy
+import time
 
 import logging
+
+# Whether to save per-client model checkpoints and training tracking.
+# These files are never read by any downstream code (aggregation and
+# evaluation use the in-memory state_dict), so saving is disabled by
+# default to keep the project folder clean. Set to True to re-enable.
+SAVE_CHECKPOINTS = True
 
 # Configure the logging module
 logging.basicConfig(level=logging.INFO,  # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
@@ -65,25 +72,49 @@ class ClientTrainer(object):
     def save_model(self):
         """
         Save the trained model to the specified directory.
+        Retry to handle transient file locking on Windows (e.g. antivirus
+        scanning the just-written checkpoint), which otherwise raises
+        OSError [Errno 22] / RuntimeError "File cannot be opened".
         """
+        if not SAVE_CHECKPOINTS:
+            return
         logging.info("Saving model to {}".format(self.save_dir))
+        os.makedirs(self.save_dir, exist_ok=True)
         save_file = os.path.join(self.save_dir, "model.cpt")
-        try:
-            torch.save(
-                self.model.state_dict(),
-                save_file,
-                _use_new_zipfile_serialization=False,
-            )
-        except:
-            torch.save(self.model.state_dict(), save_file)
+        for attempt in range(5):
+            try:
+                torch.save(
+                    self.model.state_dict(),
+                    save_file,
+                    _use_new_zipfile_serialization=False,
+                )
+                return
+            except Exception as e:
+                logging.warning("Save attempt {} failed: {}".format(attempt + 1, e))
+                time.sleep(1)
+        # Fallback to the new zipfile serialization
+        torch.save(self.model.state_dict(), save_file)
     
     
-    def save_tracking_information(self):
+    def save_tracking_information(self, tracking=None):
         """
-        Save the training tracking information.
-        This method is currently empty and can be implemented as needed.
+        Save training tracking information with retries to avoid transient
+        Windows file locking (e.g. antivirus scanning the file).
         """
-        pass
+        if not SAVE_CHECKPOINTS or tracking is None:
+            return
+        os.makedirs(self.save_dir, exist_ok=True)
+        path = os.path.join(self.save_dir, "training_tracking.pkl")
+        for attempt in range(5):
+            try:
+                with open(path, "wb") as f:
+                    pickle.dump(tracking, f)
+                return
+            except Exception as e:
+                logging.warning("Tracking save attempt {} failed: {}".format(attempt + 1, e))
+                time.sleep(1)
+        with open(path, "wb") as f:
+            pickle.dump(tracking, f)
     
     def run(self, train_loader, valid_loader=None):
         """
@@ -147,10 +178,10 @@ class ClientTrainer(object):
                         worse_count += 1
                         if worse_count >= self.patience:
                             logging.info(f"Early stopping in epoch {epoch+1}.")
-                            pickle.dump(training_tracking, open(os.path.join(self.save_dir, "training_tracking.pkl"), "wb"))
+                            self.save_tracking_information(training_tracking)
                             break
                 
-                pickle.dump(training_tracking, open(os.path.join(self.save_dir, "training_tracking.pkl"), "wb"))
+                self.save_tracking_information(training_tracking)
         else:
             min_valid_loss = float("inf")
             worse_count = 0
@@ -186,8 +217,8 @@ class ClientTrainer(object):
                         worse_count += 1
                         if worse_count >= self.patience:
                             logging.info(f"Early stopping in epoch {epoch+1}.")
-                            pickle.dump(training_tracking, open(os.path.join(self.save_dir, "training_tracking.pkl"), "wb"))
+                            self.save_tracking_information(training_tracking)
                             break
                 
-                pickle.dump(training_tracking, open(os.path.join(self.save_dir, "training_tracking.pkl"), "wb"))
+                self.save_tracking_information(training_tracking)
             

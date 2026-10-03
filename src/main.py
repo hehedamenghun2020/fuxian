@@ -49,9 +49,9 @@ beta = 0.5
 network_size = 10
 data_seed = 1234
 # no_Exp = f"nonIID_Exp1_Rerun_{epoch}epoch_10client_lr0001_lamda{shrink_lambda}_ratio{num_participants*100}"
-no_Exp = f"SAE_CEN_nonIID_Exp_{epoch}epoch_{network_size}client_{num_rounds}rounds_lr{lr_rate}_lambda{shrink_lambda}_ratio{num_participants*100}_dataseed{data_seed}"
+no_Exp = f"ECA_AE_CEN_nonIID_Exp_{epoch}epoch_{network_size}client_{num_rounds}rounds_lr{lr_rate}_ratio{num_participants*100}_dataseed{data_seed}"
 
-num_runs = 1
+num_runs = 5
 batch_size = 12
 
 new_device = True
@@ -352,7 +352,7 @@ if __name__ == "__main__":
         # for update_type in ["mse_avg"]:
             # for model_type in ["autoencoder"]:
             model_auc_comparison = []
-            for model_type in ["hybrid"]:
+            for model_type in ["eca_ae_cen"]:
                 exp_name = get_experiment_name(model_type)
                 score_type = get_score_type(model_type)
                 dataset_label = f"N-BaIoT non-IID {network_size} clients"
